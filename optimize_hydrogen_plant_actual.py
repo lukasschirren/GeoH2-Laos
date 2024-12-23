@@ -252,7 +252,7 @@ if __name__ == "__main__":
     electrolyser_type = "ALK" # ALK PEM
     
     transport_excel_path = "Parameters/transport_parameters.xlsx"
-    weather_excel_path = "Parameters_3/weather_parameters.xlsx"
+    weather_excel_path = "Parameters/weather_parameters.xlsx"
     country_excel_path = 'Parameters/country_parameters.xlsx'
     country_parameters = pd.read_excel(country_excel_path,
                                         index_col='Country')
