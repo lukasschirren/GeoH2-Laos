@@ -13,3 +13,7 @@ Data_25/hydropower_dams_25.gpkg
 Data_25/Laos_hex_final_25.geojson
 Data_30/hydropower_dams_30.gpkg
 Data_30/Laos_hex_final_30.geojson
+Cutouts_actual/capacity_factors_dry_2025.nc
+Cutouts_actual/capacity_factors_dry_2030.nc
+Cutouts_actual/capacity_factors_wet_2025.nc
+Cutouts_actual/capacity_factors_wet_2030.nc

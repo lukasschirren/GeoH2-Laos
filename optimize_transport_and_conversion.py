@@ -31,9 +31,9 @@ scenario_year = "25" # 25 30
 electrolyser_type = "ALK" # ALK PEM
 
 # Excel file with technology parameters
-technology_parameters = f"Parameters_{scenario_year}_{electrolyser_type}/technology_parameters.xlsx"
-demand_parameters = f'Parameters_{scenario_year}_{electrolyser_type}/demand_parameters.xlsx'
-country_excel_path = f'Parameters_{scenario_year}_{electrolyser_type}/country_parameters.xlsx'
+technology_parameters = "Parameters/technology_parameters.xlsx"
+demand_parameters = f'Parameters_{electrolyser_type}_{scenario_year}/demand_parameters.xlsx'
+country_excel_path = 'Parameters/country_parameters.xlsx'
 
 #%% load data from technology parameters Excel file
 
@@ -77,11 +77,11 @@ for feature in data['features']:
         feature['properties']['country'] = "Other"
 
 # Write the modified GeoJSON back to the file
-with open('Data/hexagons_with_country.geojson', 'w') as file:
+with open(f'Data_{scenario_year}/hexagons_with_country.geojson', 'w') as file:
     json.dump(data, file)
 
 # Now, load the Hexagon file in geopandas
-hexagon = gpd.read_file('Data/hexagons_with_country.geojson')
+hexagon = gpd.read_file(f'Data_{scenario_year}/hexagons_with_country.geojson')
 
 # Create Resources folder to save results if it doesn't already exist
 if not os.path.exists('Resources'):
@@ -208,5 +208,5 @@ for d in demand_center_list.index:
     hexagon[f'{d} pipeline transport and conversion costs'] = pipeline_costs # cost of supply conversion, pipeline transport, and demand conversion
 
 # Added force to UTF-8 encoding.
-hexagon.to_file('Parameters/hex_transport.geojson', driver='GeoJSON', encoding='utf-8')
+hexagon.to_file(f'Parameters_{electrolyser_type}_{scenario_year}/hex_transport.geojson', driver='GeoJSON', encoding='utf-8')
 
