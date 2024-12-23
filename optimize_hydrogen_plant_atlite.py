@@ -80,6 +80,8 @@ def hydropower_potential_with_capacity(flowrate, head, capacity, eta):
     capacity_factor = limited_potential / capacity
     return capacity_factor
 
+
+
 #########################################################################################################
 
 # Sizing of electrolysers will need to be based on the average excess electricity available in each time slice
@@ -300,7 +302,7 @@ if __name__ == "__main__":
         hydropower_potential_with_capacity,
         runoff,
         xr.DataArray(location_hydro['head'].values, dims=['plant']),
-        xr.DataArray(location_hydro['capacity'].values, dims=['plant']),
+        xr.DataArray(location_hydro['Total capacity (MW)'].values, dims=['plant']), # Take total capacity to calculate the capacity factor, but domestic to multiply in Hexagons
         eta,
         vectorize=True,
         dask='parallelized',  # Dask for parallel computation
@@ -335,7 +337,7 @@ if __name__ == "__main__":
         plants_in_hex = hydro_hex_mapping[hydro_hex_mapping['index_right'] == hex_index]['plant_index'].tolist()
         if len(plants_in_hex) > 0:
             hex_capacity_factor = capacity_factor.sel(plant=plants_in_hex)
-            plant_capacities = xr.DataArray(location_hydro.loc[plants_in_hex]['Total capacity (MW)'].values, dims=['plant'])
+            plant_capacities = xr.DataArray(location_hydro.loc[plants_in_hex]['Domestic Capacity (MW)'].values, dims=['plant'])
 
             weights = plant_capacities / plant_capacities.sum()
             weighted_avg_capacity_factor = (hex_capacity_factor * weights).sum(dim='plant')
