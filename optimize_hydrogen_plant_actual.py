@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     hexagons = gpd.read_file(f'Parameters_{electrolyser_type}_{scenario_year}/hex_transport.geojson')
     
-    cutout = atlite.Cutout('Cutouts_atlite/Laos1Y.nc')
+    cutout = atlite.Cutout('Cutouts_atlite/Laos5AVG.nc')
     layout = cutout.uniform_layout()
     
     ###############################################################
