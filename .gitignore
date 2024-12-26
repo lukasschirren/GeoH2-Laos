@@ -20,3 +20,6 @@ Data_30/hex_final_30.geojson
 Data_30/hexagons_with_country.geojson
 Data_30/hydropower_dams_30.gpkg
 Parameters_ALK_25/hex_transport.geojson
+Cutouts_atlite/Laos5AVG_pv.nc
+Cutouts_atlite/Laos5AVG_Runoff.nc
+Cutouts_atlite/Laos5AVG_wind.nc
