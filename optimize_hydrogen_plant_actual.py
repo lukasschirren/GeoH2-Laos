@@ -116,7 +116,7 @@ def demand_schedule(quantity, transport_state, transport_excel_path,
                                        ).squeeze('columns')
     truck_capacity = transport_parameters['Net capacity (kg H2)']
     start_date = "2023/01/01"
-    end_date = "2024/01/01"
+    end_date = "2024/01/01" # Not inclusive
 
     # Adjust capacity based on excess
     # schedule for trucking
@@ -200,7 +200,7 @@ def optimize_hydrogen_plant(wind_potential, pv_potential, hydro_potential, times
     n.set_snapshots(times)
 
     # Import the design of the H2 plant into the network
-    n.import_from_csv_folder(f"Parameters__{electrolyser_type}_{scenario_year}/Basic_H2_plant")
+    n.import_from_csv_folder(f"Parameters_{electrolyser_type}_{scenario_year}/Basic_H2_plant")
 
     # Import demand profile
     # Note: All flows are in MW or MWh, conversions for hydrogen done using HHVs. Hydrogen HHV = 39.4 MWh/t
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     hexagons = gpd.read_file(f'Parameters_{electrolyser_type}_{scenario_year}/hex_transport.geojson')
     
-    cutout = atlite.Cutout('Cutouts_atlite/Laos5AVG.nc')
+    cutout = atlite.Cutout('Cutouts_atlite/Laos1Y.nc')
     layout = cutout.uniform_layout()
     
     ###############################################################
@@ -324,25 +324,26 @@ if __name__ == "__main__":
             hydro_profile.loc[hex_index] = weighted_avg_capacity_factor    
     ###############################################################
 
-    pv_profile = cutout.pv(
-        panel= 'CSi',
-        orientation='latitude_optimal',
-        layout = layout,
-        shapes = hexagons,
-        per_unit = True
-        )
-    pv_profile = pv_profile.rename(dict(dim_0='hexagon'))
+    # pv_profile = cutout.pv(
+    #     panel= 'CSi',
+    #     orientation='latitude_optimal',
+    #     layout = layout,
+    #     shapes = hexagons,
+    #     per_unit = True
+    #     )
+    # pv_profile = pv_profile.rename(dict(dim_0='hexagon'))
+    pv_profile = xr.open_dataarray("Cutouts_atlite/Laos5AVG_pv.nc")
 
-    wind_profile = cutout.wind(
-        # Changed turbine type - was Vestas_V80_2MW_gridstreamer in first run
-        # Other option being explored: NREL_ReferenceTurbine_2020ATB_4MW, Enercon_E126_7500kW
-        turbine = 'Vestas_V80_2MW_gridstreamer',
-        layout = layout,
-        shapes = hexagons,
-        per_unit = True
-        )
-    wind_profile = wind_profile.rename(dict(dim_0='hexagon'))
-
+    # wind_profile = cutout.wind(
+    #     # Changed turbine type - was Vestas_V80_2MW_gridstreamer in first run
+    #     # Other option being explored: NREL_ReferenceTurbine_2020ATB_4MW, Enercon_E126_7500kW
+    #     turbine = 'Vestas_V80_2MW_gridstreamer',
+    #     layout = layout,
+    #     shapes = hexagons,
+    #     per_unit = True
+    #     )
+    # wind_profile = wind_profile.rename(dict(dim_0='hexagon'))
+    wind_profile = xr.open_dataarray("Cutouts_atlite/Laos5AVG_wind.nc")
 
 # wind_potential, pv_potential, hydro_potential, times, demand_profile, 
 # wind_max_capacity, pv_max_capacity, hydro_max_capacity,
