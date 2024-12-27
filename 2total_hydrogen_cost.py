@@ -21,7 +21,7 @@ scenario_year = "25" # 25 30
 electrolyser_type = "ALK" # ALK PEM
 
 hexagons = gpd.read_file(f'Resources/Scenario_{hydro_year}_{electrolyser_type}_{scenario_year}/hex_water.geojson')
-demand_excel_path = 'Parameters/demand_parameters.xlsx'
+demand_excel_path = f'Parameters_{electrolyser_type}_{scenario_year}/demand_parameters.xlsx'
 demand_parameters = pd.read_excel(demand_excel_path,
                                   index_col='Demand center',
                                   )

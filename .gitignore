@@ -23,3 +23,10 @@ Parameters_ALK_25/hex_transport.geojson
 Cutouts_atlite/Laos5AVG_pv.nc
 Cutouts_atlite/Laos5AVG_Runoff.nc
 Cutouts_atlite/Laos5AVG_wind.nc
+Parameters_ALK_25/demand_parameters.xlsx
+Resources/Scenario_dry_ALK_25/Archive/hex_cost_components.csv
+Resources/Scenario_dry_ALK_25/Archive/hex_cost_components.geojson
+Resources/Scenario_dry_ALK_25/Archive/hex_lcoh.geojson
+Resources/Scenario_dry_ALK_25/Archive/hex_total_cost.geojson
+Resources/Scenario_dry_ALK_25/Archive/hex_water.geojson
+Resources/Scenario_dry_ALK_25/Visualisation/visualisation_lowest_cost.png
