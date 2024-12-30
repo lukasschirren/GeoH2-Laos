@@ -27,8 +27,8 @@ import json
 
 #%% Data Input
 
-scenario_year = "25" # 25 30
-electrolyser_type = "ALK" # ALK PEM
+scenario_year = "30" # 25 30
+electrolyser_type = "PEM" # ALK PEM
 
 # Excel file with technology parameters
 technology_parameters = "Parameters/technology_parameters.xlsx"
