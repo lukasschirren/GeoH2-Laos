@@ -59,3 +59,6 @@ Resources/Scenario_dry_PEM_30/hex_cost_components.geojson
 Resources/Scenario_dry_PEM_30/hex_total_cost.geojson
 Resources/Scenario_dry_PEM_30/hex_water.geojson
 Parameters/zone_profiles.pkl
+Parameters_ALK_30/hex_transport.geojson
+optimize_transport_and_conversion-Lukas_ThinkPad.py
+optimize_hydrogen_plant_actual-Lukas_ThinkPad.py

@@ -52,7 +52,7 @@ def hydropower_potential(eta,flowrate,head):
     '''
     rho = 997 # kg/m3; Density of water
     g = physical_constants['standard acceleration of gravity'][0] # m/s2; Based on the CODATA constants 2018
-    Q = flowrate / 3600 # transform flowrate per h into flowrate per second
+    Q = (flowrate/(1000/24)) / 3600 # transform flowrate per h into flowrate per second
     return (eta * rho * g * Q * head) / (1000 * 1000) # MW
 
 def hydropower_potential_with_capacity(flowrate, head, capacity, eta):
