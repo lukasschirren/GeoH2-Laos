@@ -24,6 +24,7 @@ import time
 
 import xarray as xr
 from scipy.constants import physical_constants
+import pickle
 # import warnings
 
 # # Suppress warnings
@@ -31,6 +32,28 @@ from scipy.constants import physical_constants
 
 logging.basicConfig(level=logging.ERROR)
 
+def assign_zones_to_plants(plants_gdf, areas_gdf, zone_column="Area_new24"):
+    """
+    Assign zones to hydropower plants based on their spatial location.
+
+    Args:
+        plants_gdf (GeoDataFrame): GeoDataFrame containing hydropower plant locations.
+        areas_gdf (GeoDataFrame): GeoDataFrame containing zone polygons with the `zone_column`.
+        zone_column (str): Column name in `areas_gdf` representing zones.
+
+    Returns:
+        GeoDataFrame: Updated plants GeoDataFrame with assigned zones.
+    """
+    # Ensure both GeoDataFrames have the same CRS
+    plants_gdf = plants_gdf.to_crs(areas_gdf.crs)
+
+    # Perform spatial join to assign zones
+    plants_with_zones = gpd.sjoin(plants_gdf, areas_gdf[[zone_column, "geometry"]], how="left", predicate="intersects")
+
+    # Drop duplicate geometry columns if any
+    plants_with_zones = plants_with_zones.drop(columns=["index_right"])
+
+    return plants_with_zones
 
 def hydropower_potential(eta,flowrate,head):
     '''
@@ -80,6 +103,54 @@ def hydropower_potential_with_capacity(flowrate, head, capacity, eta):
     capacity_factor = limited_potential / capacity
     return capacity_factor
 
+def calculate_net_generation(absolute_generation, zone_profiles, plants_with_zones, zone_column):
+    """
+    Distribute zone-specific hourly demand across plants within each zone,
+    and subtract demand from the plants' absolute generation.
+
+    Parameters:
+        absolute_generation (xr.DataArray): Absolute generation (MW) for all plants (plants x time).
+        zone_profiles (dict): Dictionary mapping zones to their expanded hourly load profiles.
+        plants_with_zones (gpd.GeoDataFrame): Plant data with assigned zones and other attributes.
+        zone_column (str): Column name in `plants_with_zones` indicating plant zone (e.g., 'north', 'centre', 'south').
+
+    Returns:
+        xr.DataArray: Net hourly generation values (plants x time).
+    """
+    # Create a copy for net generation
+    net_generation = absolute_generation.copy()
+
+    # Iterate over each zone
+    for zone, hourly_zone_demand in zone_profiles.items():
+        # Filter plants belonging to the current zone
+        plants_in_zone = plants_with_zones[plants_with_zones[zone_column] == zone]
+        plants_in_zone_indices = plants_in_zone.index.tolist()
+
+        if not plants_in_zone_indices:
+            continue  # Skip if no plants in the zone
+
+        # Select absolute generation for the plants in the current zone
+        zone_generation = absolute_generation.sel(plant=plants_in_zone_indices)
+
+        # Calculate the total hourly generation for the zone
+        total_hourly_generation = zone_generation.sum(dim="plant")
+        # Avoid division by zero: replace zeros with NaN temporarily
+        total_hourly_generation = total_hourly_generation.where(total_hourly_generation != 0, other=np.nan)
+
+        # Distribute demand among plants in the zone based on their hourly generation share
+        for plant_index in plants_in_zone_indices:
+            # Fractional demand based on hourly generation share
+            fractional_demand = (
+                (zone_generation.sel(plant=plant_index) / total_hourly_generation) * hourly_zone_demand.values
+            )
+
+            # Replace NaN values in fractional_demand with 0
+            fractional_demand = fractional_demand.fillna(0)
+
+            # Subtract demand from the plant's generation
+            net_generation.loc[dict(plant=plant_index)] -= fractional_demand
+    
+    return net_generation
 
 
 #########################################################################################################
@@ -197,60 +268,51 @@ def optimize_hydrogen_plant(wind_potential, pv_potential, hydro_potential, times
             return lcoh, wind_capacity, solar_capacity, hydro_capacity, electrolyzer_capacity, battery_capacity, h2_storage
 
     # Set up network
-    # Import a generic network
     n = pypsa.Network(override_component_attrs=aux.create_override_components())
-
-    # Set the time values for the network
     n.set_snapshots(times)
 
     # Import the design of the H2 plant into the network
-    n.import_from_csv_folder("Parameters/Basic_H2_plant")
+    n.import_from_csv_folder(f"Parameters_{electrolyser_type}_{scenario_year}/Basic_H2_plant")
 
     # Import demand profile
     # Note: All flows are in MW or MWh, conversions for hydrogen done using HHVs. Hydrogen HHV = 39.4 MWh/t
-    # hydrogen_demand = pd.read_excel(demand_path,index_col = 0) # Excel file in kg hydrogen, convert to MWh
     n.add('Load', 'Hydrogen demand', bus='Hydrogen', p_set=demand_profile['Demand'] / 1000 * 39.4)
 
     # Send the weather data to the model
     n.generators_t.p_max_pu['Wind'] = wind_potential
     n.generators_t.p_max_pu['Solar'] = pv_potential
-
     n.generators_t.p_max_pu['Hydro'] = hydro_potential
+
     # Specify maximum capacity based on land use
     n.generators.loc['Hydro', 'p_nom_max'] = hydro_max_capacity
-    n.generators.loc['Wind', 'p_nom_max'] = wind_max_capacity * 2 # ADDING rated power - here 2 MW
-    n.generators.loc['Solar', 'p_nom_max'] = pv_max_capacity * 1 # ADDING the power for each node - here 1 MW
+    n.generators.loc['Wind', 'p_nom_max'] = wind_max_capacity * 2  # Rated power - here 2 MW
+    n.generators.loc['Solar', 'p_nom_max'] = pv_max_capacity * 1  # Power per node - here 1 MW
 
-    # Specify technology-specific and country-specific WACC and lifetime here
+    # Specify technology-specific and country-specific WACC and lifetime
     n.generators.loc['Hydro', 'capital_cost'] *= CRF(country_series['Hydro interest rate'], 
                                                     country_series['Hydro lifetime'])
     n.generators.loc['Wind', 'capital_cost'] *= CRF(country_series['Wind interest rate'], 
                                                     country_series['Wind lifetime (years)'])
     n.generators.loc['Solar', 'capital_cost'] *= CRF(country_series['Solar interest rate'], 
                                                      country_series['Solar lifetime (years)'])
-
     for item in [n.links, n.stores, n.storage_units]:
         item.capital_cost = item.capital_cost * CRF(country_series['Plant interest rate'], country_series['Plant lifetime (years)'])
 
-    # Solve the model
+    # Solve the model with unit commitment
     solver = 'gurobi'
-    # n.optimize(solver_name=solver,
-    #        solver_options={'LogToConsole': 0, 'OutputFlag': 0},
-    #        extra_functionality=aux.extra_functionalities)
     n.lopf(solver_name=solver,
-           solver_options = {'LogToConsole':0, 'OutputFlag':0},
-           pyomo=False,
-           extra_functionality=aux.extra_functionalities,
-           )
+           solver_options={'LogToConsole': 0, 'OutputFlag': 0},
+           pyomo=True,  # Enable Pyomo for unit commitment
+           extra_functionality=aux.extra_functionalities)
 
     # Output results
-    lcoh = n.objective / (n.loads_t.p_set.sum().iloc[0] / 39.4 * 1000)  # convert back to kg H2
+    lcoh = n.objective / (n.loads_t.p_set.sum().iloc[0] / 39.4 * 1000)  # Convert back to kg H2
     wind_capacity = n.generators.p_nom_opt['Wind']
     solar_capacity = n.generators.p_nom_opt['Solar']
-    hydro_capacity = n.generators.p_nom_opt.get('Hydro', np.nan)  # get hydro capacity if it exists
+    hydro_capacity = n.generators.p_nom_opt.get('Hydro', np.nan)  # Get hydro capacity if it exists
     electrolyzer_capacity = n.links.p_nom_opt['Electrolysis'] 
-    battery_capacity = n.storage_units.p_nom_opt['Battery']
-    h2_storage = n.stores.e_nom_opt['Compressed H2 Store']
+    battery_capacity = n.storage_units.p_nom_opt.get('Battery', np.nan)
+    h2_storage = n.stores.e_nom_opt.get('Compressed H2 Store', np.nan)
     print(lcoh)
     return lcoh, wind_capacity, solar_capacity, hydro_capacity, electrolyzer_capacity, battery_capacity, h2_storage
 
@@ -280,23 +342,22 @@ if __name__ == "__main__":
     layout = cutout.uniform_layout()
     
     ###############################################################
-    # Added for hydropower
+    # Added for hydropower / Load data
+    gdf_areas = gpd.read_file(r'Parameters\areas_laos.geojson')
+    
+    with open(f"Parameters/zone_profiles_{scenario_year}.pkl", "rb") as f:
+        zone_profiles = pickle.load(f)
+    zone_demand = pd.DataFrame(zone_profiles)
     
     location_hydro = gpd.read_file(f'Data_{scenario_year}/hydropower_dams_{scenario_year}.gpkg')
     location_hydro.rename(columns={'Latitude': 'lat', 'Longitude': 'lon'}, inplace=True)
-    location_hydro.rename(columns={'head_example':'head'},inplace=True)
+    location_hydro['geometry'] = gpd.points_from_xy(location_hydro.lon, location_hydro.lat)
     
-    laos_hydrobasins = gpd.read_file('Data_hydrobasins/hydrobasins_lvl10/hybas_as_lev10_v1c.shp')
-    laos_hydrobasins['lat'] = location_hydro.geometry.y
-    laos_hydrobasins['lon'] = location_hydro.geometry.x
+    location_hydro = assign_zones_to_plants(location_hydro, gdf_areas)
     
-    # runoff = cutout.hydro(
-    #     plants=location_hydro,
-    #     hydrobasins= laos_hydrobasins,
-    #     per_unit=True                    # Normalize output per unit area
-    # )
     runoff = xr.open_dataarray("Cutouts_atlite/Laos5AVG_Runoff.nc")
     
+    ### Actual calculation 
     eta = 0.75 # efficiency of hydropower plant
 
     capacity_factor = xr.apply_ufunc(
@@ -309,9 +370,6 @@ if __name__ == "__main__":
         dask='parallelized',  # Dask for parallel computation
         output_dtypes=[float]
     )
-    
-    location_hydro['geometry'] = gpd.points_from_xy(location_hydro.lon, location_hydro.lat)
-
 
     # Rename existing 'index_left' and 'index_right' columns if they exist
     if 'index_left' in location_hydro.columns:
@@ -325,28 +383,52 @@ if __name__ == "__main__":
 
     hydro_hex_mapping = gpd.sjoin(location_hydro, hexagons, how='left', predicate='within')
     hydro_hex_mapping['plant_index'] = hydro_hex_mapping.index
+    
     num_hexagons = len(hexagons)
     num_time_steps = len(capacity_factor.time)
-
+    
+    absolute_generation = capacity_factor * xr.DataArray(
+        location_hydro['Domestic Capacity (MW)'].values, dims=['plant']
+    )
+    
+    net_generation = calculate_net_generation(
+        absolute_generation=absolute_generation,
+        zone_profiles=zone_demand,
+        plants_with_zones=location_hydro,
+        zone_column="Area_new24"
+    )
+    
     hydro_profile = xr.DataArray(
         data=np.zeros((num_hexagons, num_time_steps)),
         dims=['hexagon', 'time'],
         coords={'hexagon': np.arange(num_hexagons), 'time': capacity_factor.time}
     )
-
+    
+    
+    # Loop over hexagons
     for hex_index in range(num_hexagons):
-        plants_in_hex = hydro_hex_mapping[hydro_hex_mapping['index_right'] == hex_index]['plant_index'].tolist()
+        # Get plants in the current hexagon
+        plants_in_hex = hydro_hex_mapping[hydro_hex_mapping["index_right"] == hex_index]["plant_index"].tolist()
+        
         if len(plants_in_hex) > 0:
-            hex_capacity_factor = capacity_factor.sel(plant=plants_in_hex)
-            plant_capacities = xr.DataArray(location_hydro.loc[plants_in_hex]['Domestic Capacity (MW)'].values, dims=['plant'])
-
-            weights = plant_capacities / plant_capacities.sum()
-            weighted_avg_capacity_factor = (hex_capacity_factor * weights).sum(dim='plant')
-            hydro_profile.loc[hex_index] = weighted_avg_capacity_factor
+            # Select net generation and plant capacities for these plants
+            hex_net_generation = net_generation.sel(plant=plants_in_hex)
+            plant_capacities = xr.DataArray(
+                location_hydro.loc[plants_in_hex]["Domestic Capacity (MW)"].values,
+                dims=["plant"]
+            )
+            # Calculate capacity factor as net generation / plant capacity
+            capacity_factor_hex = hex_net_generation / plant_capacities
             
-            # hex_capacity_factor = capacity_factor.sel(plant=plants_in_hex)
-            # average_capacity_factor = hex_capacity_factor.mean(dim='plant')
-            # hydro_profile.loc[hex_index] = average_capacity_factor
+            # Ensure capacity factor is within [0, 1]
+            capacity_factor_hex = xr.where(capacity_factor_hex > 1, 1, capacity_factor_hex)
+            capacity_factor_hex = xr.where(capacity_factor_hex < 0, 0, capacity_factor_hex)
+
+            # Weighted average capacity factor for the hexagon
+            weights = plant_capacities / plant_capacities.sum()
+            weighted_avg_capacity_factor = (capacity_factor_hex * weights).sum(dim="plant")
+            hydro_profile.loc[dict(hexagon=hex_index)] = weighted_avg_capacity_factor
+    
 
     ###############################################################
 
