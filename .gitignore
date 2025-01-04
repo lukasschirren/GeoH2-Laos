@@ -62,3 +62,5 @@ Parameters/zone_profiles.pkl
 Parameters_ALK_30/hex_transport.geojson
 optimize_transport_and_conversion-Lukas_ThinkPad.py
 optimize_hydrogen_plant_actual-Lukas_ThinkPad.py
+Resources/Scenario_dry_ALK_30/hex_lcoh.geojson
+Resources/Scenario_wet_PEM_25/hex_lcoh.geojson
