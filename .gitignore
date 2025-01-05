@@ -67,3 +67,5 @@ Resources/Scenario_wet_PEM_25/hex_lcoh.geojson
 Parameters/zone_profiles_25.pkl
 Parameters/zone_profiles_30.pkl
 Parameters/areas_laos.geojson
+Resources/Scenario_wet_ALK_25/hex_lcoh.geojson
+Resources/Scenario_wet_PEM_30/hex_lcoh.geojson
