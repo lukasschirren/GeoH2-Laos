@@ -320,7 +320,7 @@ def optimize_hydrogen_plant(wind_potential, pv_potential, hydro_potential, times
 if __name__ == "__main__":
     
     scenario_year = "25" # 25 30
-    electrolyser_type = "ALK" # ALK PEM
+    electrolyser_type = "PEM" # ALK PEM
     
     transport_excel_path = "Parameters/transport_parameters.xlsx"
     weather_excel_path = "Parameters/weather_parameters.xlsx"
