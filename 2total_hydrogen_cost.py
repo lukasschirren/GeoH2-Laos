@@ -16,9 +16,9 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 
-hydro_year = "wet" # wet dry atlite
+hydro_year = "dry" # wet dry atlite
 scenario_year = "25" # 25 30
-electrolyser_type = "PEM" # ALK PEM
+electrolyser_type = "ALK" # ALK PEM
 
 hexagons = gpd.read_file(f'Resources/Scenario_{hydro_year}_{electrolyser_type}_{scenario_year}/hex_water.geojson')
 demand_excel_path = f'Parameters_{electrolyser_type}_{scenario_year}/demand_parameters.xlsx'
@@ -33,10 +33,10 @@ for demand_center in demand_centers:
             +hexagons[f'{demand_center} trucking transport and conversion costs']\
                 +hexagons[f'{demand_center} trucking production cost']\
                     +hexagons['Lowest water cost']
-    hexagons[f'{demand_center} pipeline total cost'] =\
-            hexagons[f'{demand_center} pipeline transport and conversion costs']\
-                +hexagons[f'{demand_center} pipeline production cost']\
-                    +hexagons['Lowest water cost']
+    # hexagons[f'{demand_center} pipeline total cost'] =\
+    #         hexagons[f'{demand_center} pipeline transport and conversion costs']\
+    #             +hexagons[f'{demand_center} pipeline production cost']\
+    #                 +hexagons['Lowest water cost']
                     
     # for hexagon in hexagons.index:
     #     hexagons.loc[hexagon,f'{demand_center} lowest cost'] = np.nanmin(

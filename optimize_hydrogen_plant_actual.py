@@ -247,7 +247,7 @@ def optimize_hydrogen_plant(wind_potential, pv_potential, hydro_potential, times
 
 if __name__ == "__main__":
     
-    hydro_year = "wet" # wet dry
+    hydro_year = "dry" # wet dry
     scenario_year = "25" # 25 30
     electrolyser_type = "PEM" # ALK PEM
     
@@ -398,54 +398,54 @@ if __name__ == "__main__":
 
         print(f"Trucking optimization for {location} completed in {trucking_time} s")
 
-        # Pipeline optimization
-        lcohs_pipeline = np.zeros(len(pv_profile.hexagon))
-        solar_capacities = np.zeros(len(pv_profile.hexagon))
-        wind_capacities = np.zeros(len(pv_profile.hexagon))
-        hydro_capacities = np.zeros(len(pv_profile.hexagon))
-        electrolyzer_capacities = np.zeros(len(pv_profile.hexagon))
-        battery_capacities = np.zeros(len(pv_profile.hexagon))
-        h2_storages = np.zeros(len(pv_profile.hexagon))
-        start = time.process_time()
+        # # Pipeline optimization
+        # lcohs_pipeline = np.zeros(len(pv_profile.hexagon))
+        # solar_capacities = np.zeros(len(pv_profile.hexagon))
+        # wind_capacities = np.zeros(len(pv_profile.hexagon))
+        # hydro_capacities = np.zeros(len(pv_profile.hexagon))
+        # electrolyzer_capacities = np.zeros(len(pv_profile.hexagon))
+        # battery_capacities = np.zeros(len(pv_profile.hexagon))
+        # h2_storages = np.zeros(len(pv_profile.hexagon))
+        # start = time.process_time()
 
-        for hexagon in pv_profile.hexagon.data:
-            _, hydrogen_demand_pipeline = demand_schedule(
-                demand_parameters.loc[location,'Annual demand [kg/a]'],
-                hexagons.loc[hexagon,f'{location} trucking state'],
-                transport_excel_path,
-                weather_excel_path)
-            country_series = country_parameters.loc[hexagons.country[hexagon]]
-            lcoh, wind_capacity, solar_capacity, hydro_capacity, electrolyzer_capacity, battery_capacity, h2_storage =\
-                optimize_hydrogen_plant(wind_profile.sel(hexagon = hexagon),
-                                    pv_profile.sel(hexagon = hexagon),
-                                    hydro_profile.sel(hexagon = hexagon),
-                                    wind_profile.time,
-                                    hydrogen_demand_pipeline,
-                                    hexagons.loc[hexagon,'theo_turbines'],
-                                    hexagons.loc[hexagon,'theo_pv'],
-                                    hexagons.loc[hexagon,'hydro'],
-                                    country_series,
-                                    # water_limit = hexagons.loc[hexagon,'delta_water_m3']
-                                    )
-            lcohs_pipeline[hexagon] = lcoh
-            solar_capacities[hexagon] = solar_capacity
-            wind_capacities[hexagon] = wind_capacity
-            hydro_capacities[hexagon] = hydro_capacity
-            electrolyzer_capacities[hexagon] = electrolyzer_capacity
-            battery_capacities[hexagon] = battery_capacity
-            h2_storages[hexagon] = h2_storage
+        # for hexagon in pv_profile.hexagon.data:
+        #     _, hydrogen_demand_pipeline = demand_schedule(
+        #         demand_parameters.loc[location,'Annual demand [kg/a]'],
+        #         hexagons.loc[hexagon,f'{location} trucking state'],
+        #         transport_excel_path,
+        #         weather_excel_path)
+        #     country_series = country_parameters.loc[hexagons.country[hexagon]]
+        #     lcoh, wind_capacity, solar_capacity, hydro_capacity, electrolyzer_capacity, battery_capacity, h2_storage =\
+        #         optimize_hydrogen_plant(wind_profile.sel(hexagon = hexagon),
+        #                             pv_profile.sel(hexagon = hexagon),
+        #                             hydro_profile.sel(hexagon = hexagon),
+        #                             wind_profile.time,
+        #                             hydrogen_demand_pipeline,
+        #                             hexagons.loc[hexagon,'theo_turbines'],
+        #                             hexagons.loc[hexagon,'theo_pv'],
+        #                             hexagons.loc[hexagon,'hydro'],
+        #                             country_series,
+        #                             # water_limit = hexagons.loc[hexagon,'delta_water_m3']
+        #                             )
+        #     lcohs_pipeline[hexagon] = lcoh
+        #     solar_capacities[hexagon] = solar_capacity
+        #     wind_capacities[hexagon] = wind_capacity
+        #     hydro_capacities[hexagon] = hydro_capacity
+        #     electrolyzer_capacities[hexagon] = electrolyzer_capacity
+        #     battery_capacities[hexagon] = battery_capacity
+        #     h2_storages[hexagon] = h2_storage
 
-        pipeline_time = time.process_time() - start
+        # pipeline_time = time.process_time() - start
 
-        hexagons[f'{location} pipeline solar capacity'] = solar_capacities
-        hexagons[f'{location} pipeline wind capacity'] = wind_capacities
-        hexagons[f'{location} pipeline hydro capacity'] = hydro_capacities
-        hexagons[f'{location} pipeline electrolyzer capacity'] = electrolyzer_capacities
-        hexagons[f'{location} pipeline battery capacity'] = battery_capacities
-        hexagons[f'{location} pipeline H2 storage capacity'] = h2_storages
-        hexagons[f'{location} pipeline production cost'] = lcohs_pipeline
+        # hexagons[f'{location} pipeline solar capacity'] = solar_capacities
+        # hexagons[f'{location} pipeline wind capacity'] = wind_capacities
+        # hexagons[f'{location} pipeline hydro capacity'] = hydro_capacities
+        # hexagons[f'{location} pipeline electrolyzer capacity'] = electrolyzer_capacities
+        # hexagons[f'{location} pipeline battery capacity'] = battery_capacities
+        # hexagons[f'{location} pipeline H2 storage capacity'] = h2_storages
+        # hexagons[f'{location} pipeline production cost'] = lcohs_pipeline
 
-        print(f"Pipeline optimization for {location} completed in {pipeline_time} s")
+        # print(f"Pipeline optimization for {location} completed in {pipeline_time} s")
 
     hexagons.to_file(f'Resources/Scenario_{hydro_year}_{electrolyser_type}_{scenario_year}/hex_lcoh.geojson', driver='GeoJSON', encoding='utf-8')
     
