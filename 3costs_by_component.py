@@ -16,7 +16,7 @@ import numpy as np
 from geopy.geocoders import Nominatim
 import functions
 
-hydro_year = "dry" # wet dry atlite
+hydro_year = "wet" # wet dry atlite
 scenario_year = "25" # 25 30
 electrolyser_type = "ALK" # ALK PEM
 
