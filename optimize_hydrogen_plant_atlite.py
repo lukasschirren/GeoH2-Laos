@@ -320,7 +320,7 @@ def optimize_hydrogen_plant(wind_potential, pv_potential, hydro_potential, times
 if __name__ == "__main__":
     
     scenario_year = "25" # 25 30
-    electrolyser_type = "PEM" # ALK PEM
+    electrolyser_type = "ALK" # ALK PEM
     
     transport_excel_path = "Parameters/transport_parameters.xlsx"
     weather_excel_path = "Parameters/weather_parameters.xlsx"
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     
     location_hydro = assign_zones_to_plants(location_hydro, gdf_areas)
     
-    runoff = xr.open_dataarray("Cutouts_atlite/Laos5AVG_Runoff.nc")
+    runoff = xr.open_dataarray(f'Cutouts_atlite/Laos5AVG_Runoff_{scenario_year}.nc')
     
     ### Actual calculation 
     eta = 0.75 # efficiency of hydropower plant

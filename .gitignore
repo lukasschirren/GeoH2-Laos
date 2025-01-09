@@ -167,3 +167,6 @@ Resources/net_generation/Scenario_atlite_PEM_25/hex_lcoh.geojson
 Resources/net_generation/Scenario_atlite_PEM_25/hex_total_cost.geojson
 Resources/net_generation/Scenario_atlite_PEM_25/hex_water.geojson
 Visualisation/net_generation/cost_comparisons/cost_distribution_comparison.png
+Cutouts_atlite/Laos5AVG_Runoff_25.nc
+Cutouts_atlite/Laos5AVG_Runoff_30.nc
+optimize_hydrogen_plant_actual_remote.py
