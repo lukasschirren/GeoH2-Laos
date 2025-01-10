@@ -257,7 +257,9 @@ def main(generation_type='total'):
         ('wet', '25', 'PEM'),
         ('wet', '30', 'PEM'),
         ('atlite', '25', 'ALK'),
-        ('atlite', '25', 'PEM')
+        ('atlite', '25', 'PEM'),
+        ('atlite', '30', 'ALK'),
+        ('atlite', '30', 'PEM'),
     ]
 
     print(f"Processing {generation_type} generation scenarios...")

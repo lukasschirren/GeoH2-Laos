@@ -16,9 +16,10 @@ import numpy as np
 from geopy.geocoders import Nominatim
 import functions
 
-hydro_year = "dry" # wet dry atlite
-scenario_year = "30" # 25 30
-electrolyser_type = "PEM" # ALK PEM
+hydro_year = "atlite" # wet dry atlite
+scenario_year = "25" # 25 30
+electrolyser_type = "ALK" # ALK PEM
+
 
 # Load hexagons
 hexagons = gpd.read_file(f'Resources/Scenario_{hydro_year}_{electrolyser_type}_{scenario_year}/hex_total_cost.geojson')
