@@ -182,3 +182,5 @@ Resources/net_generation/Scenario_atlite_PEM_30/hex_total_cost.geojson
 Resources/net_generation/Scenario_atlite_PEM_30/hex_water.geojson
 optimize_hydrogen_plant_atlite_total_tp.py
 optimize_hydrogen_plant_atlite_total_remote.py
+Resources/Scenario_atlite_ALK_30/hex_lcoh.geojson
+Resources/Scenario_atlite_PEM_30/hex_lcoh.geojson
