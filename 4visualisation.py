@@ -268,5 +268,5 @@ def main(generation_type='total'):
     print("Done!")
 
 if __name__ == "__main__":
-    generation_type = 'net'  # 'total' or 'net'
+    generation_type = 'total'  # 'total' or 'net'
     main(generation_type)

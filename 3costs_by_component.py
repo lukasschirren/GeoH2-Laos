@@ -17,8 +17,8 @@ from geopy.geocoders import Nominatim
 import functions
 
 hydro_year = "atlite" # wet dry atlite
-scenario_year = "25" # 25 30
-electrolyser_type = "ALK" # ALK PEM
+scenario_year = "30" # 25 30
+electrolyser_type = "PEM" # ALK PEM
 
 
 # Load hexagons
