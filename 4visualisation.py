@@ -14,6 +14,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 import matplotlib.colors as mcolors
+from matplotlib.patches import Patch
 
 def ensure_directory_exists(path):
     """Create directory if it doesn't exist"""
@@ -27,7 +28,15 @@ def create_scenario_folder(base_path, hydro_year, electrolyser_type, scenario_ye
     return scenario_folder
 
 def plot_full_cost_map(hexagons, demand_center, cost_column, save_path, provinces=None, vmin=None, vmax=None):
-    """Plots and saves a map showing production costs"""
+    """Plots a map showing production costs in discrete color bins using Greens_r colormap"""
+    # Define bins and get colors from Greens_r
+    bins = [3, 4, 5, 6, 7, 8, 9, 10, float('inf')]
+    labels = ['3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10', '10+']
+    
+    # Get N colors from Greens_r and reverse them
+    greens = plt.cm.Greens_r(np.linspace(0.2, 0.8, len(labels)))
+    cmap = mcolors.ListedColormap(greens)
+    
     crs = ccrs.PlateCarree()
     fig, ax = plt.subplots(figsize=(12, 8), subplot_kw={'projection': crs}, dpi=300)
     ax.set_axis_off()
@@ -36,6 +45,9 @@ def plot_full_cost_map(hexagons, demand_center, cost_column, save_path, province
     zero_mask = hexagons_copy[cost_column] == 0
     hexagons_copy.loc[zero_mask, cost_column] = np.nan
 
+    # Create normalization for discrete bins
+    norm = mcolors.BoundaryNorm(bins, cmap.N)
+
     if provinces is not None:
         provinces.to_crs(crs.proj4_init).plot(
             ax=ax, color='none', edgecolor='black', linewidth=0.5)
@@ -43,29 +55,31 @@ def plot_full_cost_map(hexagons, demand_center, cost_column, save_path, province
     plot = hexagons_copy.to_crs(crs.proj4_init).plot(
         ax=ax,
         column=cost_column,
-        legend=True,
-        cmap='Greens_r',
-        legend_kwds={
-            'label': 'LCOH (USD/kgH2)',
-            'orientation': 'vertical',
-            'shrink': 0.5,
-            'pad': 0.05,
-            'anchor': (-1.1, 1.0)
-        },
+        cmap=cmap,
+        norm=norm,
+        legend=False,
         missing_kwds={
             "color": "lightgrey",
-            "label": "No Data or Zero",
+            "label": "Not feasible",
         },
         edgecolor='black',
-        linewidth=0.2,
-        vmin=vmin,
-        vmax=vmax
+        linewidth=0.2
     )
+    
 
-    if plot.get_legend() is not None:
-        legend = plot.get_legend()
-        legend.set_bbox_to_anchor((1, 0.5))
-        legend.set_frame_on(True)
+    # Create custom legend with Greens_r colors
+    legend_elements = [Patch(facecolor=greens[i], edgecolor='black', label=label)
+                      for i, label in enumerate(labels)]
+    legend_elements.append(Patch(facecolor='lightgrey', edgecolor='black', 
+                               label='Not feasible'))
+
+    legend = ax.legend(handles=legend_elements,
+                      title='LCOH (USD/kgH2)',
+                      bbox_to_anchor=(0.7, 0.8),
+                      loc='center left',
+                      frameon=True,
+                      fontsize=10)
+    legend.get_title().set_fontsize(12)
 
     fig.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close(fig)
@@ -216,6 +230,7 @@ def process_scenario(hydro_year, electrolyser_type, scenario_year, generation_ty
     try:
         # Load data
         gdf_data = gpd.read_file(os.path.join(data_path, 'hex_cost_components.geojson'))
+        gdf_data = gdf_data.drop_duplicates(subset=['h3_index'])
         
         # Generate cost visualizations
         plot_full_cost_map(gdf_data, 'Vientiane', 'Vientiane trucking production cost',
