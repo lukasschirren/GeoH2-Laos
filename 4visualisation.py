@@ -33,8 +33,9 @@ def plot_full_cost_map(hexagons, demand_center, cost_column, save_path, province
     bins = [3, 4, 5, 6, 7, 8, 9, 10, float('inf')]
     labels = ['3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10', '10+']
     
-    # Get N colors from Greens_r and reverse them
-    greens = plt.cm.Greens_r(np.linspace(0.2, 0.8, len(labels)))
+    # Get N colors from Greens_r with increased contrast
+    greens = plt.cm.Greens_r(np.linspace(0.05, 0.95, len(labels)))
+    
     cmap = mcolors.ListedColormap(greens)
     
     crs = ccrs.PlateCarree()
@@ -242,10 +243,11 @@ def process_scenario(hydro_year, electrolyser_type, scenario_year, generation_ty
         capacity_settings = {
             'hydro': {'vmin': 0, 'vmax': 100},
             'solar': {'vmin': 20, 'vmax': 440},
-            'wind': {'vmin': 20, 'vmax': 440}
+            'wind': {'vmin': 20, 'vmax': 440},
+            'electrolyzer': {'vmin': 0, 'vmax': 200} 
         }
         
-        capacity_types = ['hydro', 'solar', 'wind']
+        capacity_types = ['hydro', 'solar', 'wind', 'electrolyzer']
         for capacity_type in capacity_types:
             plot_capacity_map(
                 gdf_data,
