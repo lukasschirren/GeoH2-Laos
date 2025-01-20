@@ -254,8 +254,8 @@ def create_cost_distribution(scenarios_data, max_cost):
             title=dict(font=dict(size=12)),
             tracegroupgap=40
         ),
-        margin=dict(l=50, r=250, t=50, b=50),
-        height=500,
+        autosize=True,  # Automatically adjust size
+        margin=dict(l=20, r=20, t=20, b=20),  # Minimize margins
         width=None,
         # plot_bgcolor='white',
         xaxis=dict(
