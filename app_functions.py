@@ -72,8 +72,8 @@ def create_interactive_cost_map(hexagons, cost_column, max_cost=10):
         margin={"r":0,"t":0,"l":0,"b":0},
         legend=dict(
             title="LCOH (USD/kgH2)",
-            yanchor="top",
-            y=0.99,
+            yanchor="bottom",
+            y=0.01,
             xanchor="left",
             x=0.01,
             # bgcolor="rgba(255, 255, 255, 0.8)"
@@ -81,6 +81,40 @@ def create_interactive_cost_map(hexagons, cost_column, max_cost=10):
         hoverlabel=dict(
             bgcolor="black",
             font_size=12
+        )
+    )
+
+    return fig
+
+def create_interactive_capacity_map(hexagons, capacity_column, vmin, vmax):
+    """Creates an interactive capacity map using Plotly"""
+    fig = px.choropleth_mapbox(
+        hexagons,
+        geojson=hexagons.geometry.__geo_interface__,
+        locations=hexagons.index,
+        color=capacity_column,
+        color_continuous_scale="Viridis",
+        range_color=[vmin, vmax],
+        hover_data={capacity_column: ':.2f'},
+        mapbox_style="carto-positron",
+        opacity=0.7,
+        center={"lat": 18, "lon": 103},
+        zoom=5
+    )
+
+    fig.update_layout(
+        margin={"r":0,"t":0,"l":0,"b":0},
+        coloraxis_colorbar=dict(
+            title="Capacity [MW]",
+            thicknessmode="pixels",
+            thickness=15,
+            lenmode="pixels",
+            len=150,
+            yanchor="bottom",
+            y=0.03,
+            xanchor="left",
+            x=0.03,
+            bgcolor="black"
         )
     )
 
@@ -153,40 +187,6 @@ def generate_waterfall_chart(gdf):
         height=500,
         margin=dict(l=20, r=20, t=20, b=20),
         font=dict(family="Arial")
-    )
-
-    return fig
-
-def create_interactive_capacity_map(hexagons, capacity_column, vmin, vmax):
-    """Creates an interactive capacity map using Plotly"""
-    fig = px.choropleth_mapbox(
-        hexagons,
-        geojson=hexagons.geometry.__geo_interface__,
-        locations=hexagons.index,
-        color=capacity_column,
-        color_continuous_scale="Viridis",
-        range_color=[vmin, vmax],
-        hover_data={capacity_column: ':.2f'},
-        mapbox_style="carto-positron",
-        opacity=0.7,
-        center={"lat": 18, "lon": 103},
-        zoom=5
-    )
-
-    fig.update_layout(
-        margin={"r":0,"t":0,"l":0,"b":0},
-        coloraxis_colorbar=dict(
-            title="Capacity [MW]",
-            thicknessmode="pixels",
-            thickness=20,
-            lenmode="pixels",
-            len=300,
-            yanchor="top",
-            y=0.99,
-            xanchor="left",
-            x=0.01,
-            bgcolor="black"
-        )
     )
 
     return fig
