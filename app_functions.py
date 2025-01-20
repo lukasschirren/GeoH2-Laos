@@ -119,7 +119,7 @@ def generate_waterfall_chart(gdf):
         connector={"line": {"color": "rgb(63, 63, 63)", "dash": "dot"}},
         increasing={"marker": {"color": "#0000ff"}},
         decreasing={"marker": {"color": "#ff7f0e"}},
-        totals={"marker": {"color": "#000000"}}
+        totals={"marker": {"color": "white"}}
     ))
 
     fig.update_layout(
@@ -132,9 +132,9 @@ def generate_waterfall_chart(gdf):
             'mirror': True,
             'tickfont': {'size': 14},
             'titlefont': {'size': 16},
-            'showgrid': True,
-            'gridwidth': 1,
-            'gridcolor': 'lightgrey'
+            # 'showgrid': True,
+            # 'gridwidth': 1,
+            # 'gridcolor': 'lightgrey'
         },
         yaxis={
             'showline': True,
@@ -147,7 +147,7 @@ def generate_waterfall_chart(gdf):
             'gridwidth': 1,
             'gridcolor': 'lightgrey'
         },
-        plot_bgcolor='white',
+        # plot_bgcolor='white',
         showlegend=False,
         width=700,
         height=500,
@@ -157,25 +157,140 @@ def generate_waterfall_chart(gdf):
 
     return fig
 
-def plot_cost_distribution(data, cost_column, max_cost=10):
-    """Creates cost distribution plot"""
-    mask = (data[cost_column] > 0) & (data[cost_column] <= max_cost)
-    costs = data[mask][cost_column].sort_values()
-    x_values = np.arange(len(costs)) * 1000
+def create_interactive_capacity_map(hexagons, capacity_column, vmin, vmax):
+    """Creates an interactive capacity map using Plotly"""
+    fig = px.choropleth_mapbox(
+        hexagons,
+        geojson=hexagons.geometry.__geo_interface__,
+        locations=hexagons.index,
+        color=capacity_column,
+        color_continuous_scale="Viridis",
+        range_color=[vmin, vmax],
+        hover_data={capacity_column: ':.2f'},
+        mapbox_style="carto-positron",
+        opacity=0.7,
+        center={"lat": 18, "lon": 103},
+        zoom=5
+    )
+
+    fig.update_layout(
+        margin={"r":0,"t":0,"l":0,"b":0},
+        coloraxis_colorbar=dict(
+            title="Capacity [MW]",
+            thicknessmode="pixels",
+            thickness=20,
+            lenmode="pixels",
+            len=300,
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=0.01,
+            bgcolor="black"
+        )
+    )
+
+    return fig
+
+def create_cost_distribution(scenarios_data, max_cost):
+    """Creates cost distribution plot comparing net and total generation"""
+    fig = go.Figure()
     
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(x_values, costs, color='#2ecc71', linewidth=2.5)
-    ax.fill_between(x_values, costs, alpha=0.2, color='#2ecc71')
+    # Sort scenarios by generation type
+    net_scenarios = [s for s in scenarios_data if s['gen'] == 'net_generation']
+    total_scenarios = [s for s in scenarios_data if s['gen'] == 'total_generation']
     
-    ax.set_xlabel('Cumulative Production Potential (kt)', fontsize=10)
-    ax.set_ylabel('LCOH (USD/kgH2)', fontsize=10)
-    ax.grid(True, linestyle='--', alpha=0.3)
+    # Plot net generation traces
+    for scenario in net_scenarios:
+        data = scenario['data']
+        mask = (data['Vientiane trucking production cost'] > 0) & \
+            (data['Vientiane trucking production cost'] <= max_cost)
+        costs = data[mask]['Vientiane trucking production cost'].sort_values()
+        x_values = np.arange(len(costs))
+        
+        name = f"{scenario['hydro'].capitalize()} {scenario['elec']} {scenario['year']}"
+        
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=costs,
+            name=name,
+            line=dict(dash='dash'),
+            showlegend=True,
+            legendgroup="net",
+            legendgrouptitle_text="Net Generation"
+        ))
     
-    step = 10000
-    ax.set_xticks(np.arange(0, len(costs) * 1000, step))
-    ax.set_xticklabels([f'{int(x/1000)}k' for x in ax.get_xticks()])
+    # Plot total generation traces
+    for scenario in total_scenarios:
+        data = scenario['data']
+        mask = (data['Vientiane trucking production cost'] > 0) & \
+            (data['Vientiane trucking production cost'] <= max_cost)
+        costs = data[mask]['Vientiane trucking production cost'].sort_values()
+        x_values = np.arange(len(costs))
+        
+        name = f"{scenario['hydro'].capitalize()} {scenario['elec']} {scenario['year']}"
+        
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=costs,
+            name=name,
+            line=dict(dash='solid'),
+            showlegend=True,
+            legendgroup="total",
+            legendgrouptitle_text="Total Generation"
+        ))
     
-    return fig, ax
+    fig.update_layout(
+        xaxis_title="Cumulative Production Potential",
+        yaxis_title="LCOH (USD/kgH2)",
+        showlegend=True,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=1.05,
+            groupclick="toggleitem",
+            itemsizing="constant",
+            font=dict(size=10),
+            title=dict(font=dict(size=12)),
+            tracegroupgap=40
+        ),
+        margin=dict(l=50, r=250, t=50, b=50),
+        height=500,
+        width=None,
+        # plot_bgcolor='white',
+        xaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='lightgrey',
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor='lightgrey',
+            range=[3, max_cost]
+        )
+    )
+    return fig
+
+# def plot_cost_distribution(data, cost_column, max_cost=10):
+#     """Creates cost distribution plot"""
+#     mask = (data[cost_column] > 0) & (data[cost_column] <= max_cost)
+#     costs = data[mask][cost_column].sort_values()
+#     x_values = np.arange(len(costs)) * 1000
+    
+#     fig, ax = plt.subplots(figsize=(10, 6))
+#     ax.plot(x_values, costs, color='#2ecc71', linewidth=2.5)
+#     ax.fill_between(x_values, costs, alpha=0.2, color='#2ecc71')
+    
+#     ax.set_xlabel('Cumulative Production Potential (kt)', fontsize=10)
+#     ax.set_ylabel('LCOH (USD/kgH2)', fontsize=10)
+#     ax.grid(True, linestyle='--', alpha=0.3)
+    
+#     step = 10000
+#     ax.set_xticks(np.arange(0, len(costs) * 1000, step))
+#     ax.set_xticklabels([f'{int(x/1000)}k' for x in ax.get_xticks()])
+    
+#     return fig, ax
 
 def create_scenario_folder(base_path, hydro_year, electrolyser_type, scenario_year):
     """Create scenario-specific folder and return its path"""
