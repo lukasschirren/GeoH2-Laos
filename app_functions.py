@@ -119,7 +119,7 @@ def generate_waterfall_chart(gdf):
         connector={"line": {"color": "rgb(63, 63, 63)", "dash": "dot"}},
         increasing={"marker": {"color": "#0000ff"}},
         decreasing={"marker": {"color": "#ff7f0e"}},
-        totals={"marker": {"color": "white"}}
+        totals={"marker": {"color": "lightgrey"}}
     ))
 
     fig.update_layout(
@@ -149,9 +149,9 @@ def generate_waterfall_chart(gdf):
         },
         # plot_bgcolor='white',
         showlegend=False,
-        width=700,
+        width=None,
         height=500,
-        margin=dict(l=80, r=20, t=80, b=80),
+        margin=dict(l=20, r=20, t=20, b=20),
         font=dict(family="Arial")
     )
 
@@ -267,7 +267,7 @@ def create_cost_distribution(scenarios_data, max_cost):
             showgrid=True,
             gridwidth=1,
             gridcolor='lightgrey',
-            range=[3, max_cost]
+            range=[3.5, max_cost]
         )
     )
     return fig
