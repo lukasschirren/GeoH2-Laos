@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit.components.v1 import html
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 import geopandas as gpd
 import numpy as np
 import plotly.express as px
@@ -105,57 +106,30 @@ current_data = next(s['data'] for s in scenarios_data
 
 # Responsive layout
 if is_mobile:
+    # Mobile layout - vertical stack
     st.title("Hydrogen Production Scenarios")
     
-    # Add quick navigation
-    nav_selection = st.radio("Navigate to:", 
-                           ["Cost Map", "Capacity", "Cost Breakdown", "Distribution"],
-                           horizontal=True)
+    st.subheader("Production Cost Map")
+    st.plotly_chart(create_interactive_cost_map(current_data, 
+                    'Vientiane trucking production cost', max_cost),
+                    use_container_width=True)
     
-    st.markdown("---")  # Visual divider
+    st.subheader("Capacity Distribution")
+    capacity_type = st.selectbox("Select Capacity Type", 
+                               ['hydro', 'solar', 'wind', 'electrolyzer'])
+    st.plotly_chart(create_interactive_capacity_map(current_data,
+                    f'Vientiane trucking {capacity_type} capacity',
+                    vmin=capacity_settings[capacity_type]['vmin'],
+                    vmax=capacity_settings[capacity_type]['vmax']),
+                    use_container_width=True)
     
-    # Production Cost Map Section
-    with st.expander("Production Cost Map", expanded=(nav_selection=="Cost Map")):
-        st.plotly_chart(create_interactive_cost_map(
-            current_data, 
-            'Vientiane trucking production cost', 
-            max_cost
-        ), use_container_width=True)
+    st.subheader("Cost Breakdown")
+    st.plotly_chart(generate_waterfall_chart(current_data),
+                    use_container_width=True)
     
-    # Capacity Section
-    with st.expander("Capacity Distribution", expanded=(nav_selection=="Capacity")):
-        capacity_type = st.select_slider(
-            "Select Capacity Type",
-            options=['hydro', 'solar', 'wind', 'electrolyzer']
-        )
-        st.plotly_chart(create_interactive_capacity_map(
-            current_data,
-            f'Vientiane trucking {capacity_type} capacity',
-            vmin=capacity_settings[capacity_type]['vmin'],
-            vmax=capacity_settings[capacity_type]['vmax']
-        ), use_container_width=True)
-    
-    # Cost Breakdown Section
-    with st.expander("Cost Breakdown", expanded=(nav_selection=="Cost Breakdown")):
-        st.plotly_chart(generate_waterfall_chart(
-            current_data
-        ), use_container_width=True)
-    
-    # Cost Distribution Section
-    with st.expander("Cost Distribution", expanded=(nav_selection=="Distribution")):
-        st.plotly_chart(create_cost_distribution(
-            scenarios_data, 
-            max_cost
-        ), use_container_width=True)
-
-    # Add quick scroll to top button
-    if st.button("Scroll to Top ⬆"):
-        st.markdown("""
-            <script>
-                window.scrollTo(0,0);
-            </script>
-        """, unsafe_allow_html=True)
-
+    st.subheader("Cost Distribution")
+    st.plotly_chart(create_cost_distribution(scenarios_data, max_cost), 
+                use_container_width=True)
 
 else:
     # Desktop layout - 2x2 grid
