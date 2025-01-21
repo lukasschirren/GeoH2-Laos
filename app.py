@@ -6,7 +6,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from app_functions import (create_interactive_cost_map, create_interactive_capacity_map, 
-                         generate_waterfall_chart, create_cost_distribution)
+                         generate_waterfall_chart, create_cost_distribution,
+                         get_capacity_ranges)
 
 # Page config
 st.set_page_config(layout="wide", page_title="Hydrogen Production Scenarios")
@@ -67,12 +68,12 @@ scenario_year = st.sidebar.selectbox("Scenario Year", ["25", "30"])
 max_cost = st.sidebar.slider("Max Cost (USD/kgH2)", min_value=5, max_value=25, value=7)
 
 # Capacity settings
-capacity_settings = {
-    'hydro': {'vmin': 0, 'vmax': 100},
-    'solar': {'vmin': 20, 'vmax': 440},
-    'wind': {'vmin': 20, 'vmax': 440},
-    'electrolyzer': {'vmin': 0, 'vmax': 200}
-}
+# capacity_settings = {
+#     'hydro': {'vmin': 0, 'vmax': 100},
+#     'solar': {'vmin': 20, 'vmax': 500},
+#     'wind': {'vmin': 20, 'vmax': 200},
+#     'electrolyzer': {'vmin': 0, 'vmax': 200}
+# }
 
 # Load data
 @st.cache_data
@@ -104,6 +105,8 @@ current_data = next(s['data'] for s in scenarios_data
                    and s['elec'] == electrolyser_type 
                    and s['year'] == scenario_year)
 
+capacity_settings = get_capacity_ranges(current_data)
+
 # Responsive layout
 if is_mobile:
     # Mobile layout - vertical stack
@@ -116,12 +119,13 @@ if is_mobile:
     
     st.subheader("Capacity Distribution")
     capacity_type = st.selectbox("Select Capacity Type", 
-                               ['hydro', 'solar', 'wind', 'electrolyzer'])
-    st.plotly_chart(create_interactive_capacity_map(current_data,
-                    f'Vientiane trucking {capacity_type} capacity',
-                    vmin=capacity_settings[capacity_type]['vmin'],
-                    vmax=capacity_settings[capacity_type]['vmax']),
-                    use_container_width=True)
+                               list(capacity_settings.keys()))
+    st.plotly_chart(create_interactive_capacity_map(
+        current_data,
+        f'Vientiane trucking {capacity_type} capacity',
+        vmin=capacity_settings[capacity_type]['vmin'],
+        vmax=capacity_settings[capacity_type]['vmax']
+    ), use_container_width=True)
     
     st.subheader("Cost Breakdown")
     st.plotly_chart(generate_waterfall_chart(current_data),
@@ -145,12 +149,13 @@ else:
         
         st.subheader("Capacity Distribution")
         capacity_type = st.selectbox("Select Capacity Type",
-                                   ['hydro', 'solar', 'wind', 'electrolyzer'])
-        st.plotly_chart(create_interactive_capacity_map(current_data,
-                        f'Vientiane trucking {capacity_type} capacity',
-                        vmin=capacity_settings[capacity_type]['vmin'],
-                        vmax=capacity_settings[capacity_type]['vmax']),
-                        use_container_width=True)
+            list(capacity_settings.keys()))
+        st.plotly_chart(create_interactive_capacity_map(
+            current_data,
+            f'Vientiane trucking {capacity_type} capacity',
+            vmin=capacity_settings[capacity_type]['vmin'],
+            vmax=capacity_settings[capacity_type]['vmax']
+        ), use_container_width=True)
     
     with right_col:
         st.subheader("Cost Breakdown")
@@ -160,3 +165,11 @@ else:
         st.subheader("Cost Distribution")
         st.plotly_chart(create_cost_distribution(scenarios_data, max_cost), 
                 use_container_width=True)
+        
+    # Additional stats
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Scenario Statistics")
+    st.sidebar.write(f"Minimum Cost: {current_data['Vientiane trucking production cost'].min():.2f} USD/kgH2")
+    st.sidebar.write(f"Maximum Cost: {current_data['Vientiane trucking production cost'].max():.2f} USD/kgH2")
+    st.sidebar.write(f"Mean Cost: {current_data['Vientiane trucking production cost'].mean():.2f} USD/kgH2")
+    

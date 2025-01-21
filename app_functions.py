@@ -120,6 +120,44 @@ def create_interactive_capacity_map(hexagons, capacity_column, vmin, vmax):
 
     return fig
 
+def create_interactive_capacity_map(hexagons, capacity_column, vmin, vmax):
+    """Creates an interactive capacity map using Plotly"""
+    # Create copy and mask zeros
+    hexagons_copy = hexagons.copy()
+    hexagons_copy.loc[hexagons_copy[capacity_column] == 0, capacity_column] = np.nan
+
+    fig = px.choropleth_mapbox(
+        hexagons_copy,
+        geojson=hexagons_copy.geometry.__geo_interface__,
+        locations=hexagons_copy.index,
+        color=capacity_column,
+        color_continuous_scale="cividis",
+        range_color=[vmin, vmax],
+        hover_data={capacity_column: ':.2f'},
+        mapbox_style="carto-positron",
+        opacity=0.7,
+        center={"lat": 18, "lon": 103},
+        zoom=5
+    )
+
+    fig.update_layout(
+        margin={"r":0,"t":0,"l":0,"b":0},
+        coloraxis_colorbar=dict(
+            title="Capacity [MW]",
+            thicknessmode="pixels",
+            thickness=15,
+            lenmode="pixels",
+            len=150,
+            yanchor="bottom",
+            y=0.03,
+            xanchor="left",
+            x=0.03,
+            bgcolor="black"
+        )
+    )
+
+    return fig
+
 def generate_waterfall_chart(gdf):
     """Generate waterfall chart for cost breakdown"""
     # Find min-cost hexagon
@@ -297,3 +335,27 @@ def create_scenario_folder(base_path, hydro_year, electrolyser_type, scenario_ye
     scenario_folder = os.path.join(base_path, f"Scenario_{hydro_year}_{electrolyser_type}_{scenario_year}")
     ensure_directory_exists(scenario_folder)
     return scenario_folder
+
+def get_capacity_ranges(data):
+    """Calculate capacity ranges from data"""
+    ranges = {}
+    base_types = {
+        'hydro': {'min_threshold': 0},
+        'solar': {'min_threshold': 20},
+        'wind': {'min_threshold': 20},
+        'electrolyzer': {'min_threshold': 0},
+        'battery': {'min_threshold': 0},
+        # 'H2 storage': {'min_threshold': 0}
+    }
+    
+    for cap_type in base_types.keys():
+        column = f'Vientiane trucking {cap_type} capacity'
+        if column in data.columns:
+            values = data[data[column] > 0][column]
+            if not values.empty:
+                vmin = base_types[cap_type]['min_threshold']
+                vmax = np.ceil(values.max() / 100) * 100  # Round up to nearest 100
+                ranges[cap_type] = {'vmin': vmin, 'vmax': vmax}
+    
+    return ranges
+
