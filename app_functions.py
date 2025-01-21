@@ -222,7 +222,7 @@ def generate_waterfall_chart(gdf):
         # plot_bgcolor='white',
         showlegend=False,
         width=None,
-        height=500,
+        height=450,
         margin=dict(l=20, r=20, t=20, b=20),
         font=dict(family="Arial")
     )
