@@ -20,7 +20,7 @@ def get_cost_categories():
     colors = px.colors.sample_colorscale("Greens_r", len(labels))
     return bins, labels, colors
 
-def create_interactive_cost_map(hexagons, cost_column, max_cost=10):
+def create_interactive_cost_map(hexagons, cost_column):
     """Creates an interactive cost map with fixed legend categories"""
     bins, labels, colors = get_cost_categories()
     

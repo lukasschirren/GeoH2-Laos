@@ -65,7 +65,6 @@ generation_type = st.sidebar.selectbox("Generation Type", ["total_generation", "
 hydro_year = st.sidebar.selectbox("Hydro Year", ["wet", "dry", "atlite"])
 electrolyser_type = st.sidebar.selectbox("Electrolyser Type", ["ALK", "PEM"])
 scenario_year = st.sidebar.selectbox("Scenario Year", ["25", "30"])
-max_cost = st.sidebar.slider("Max Cost (USD/kgH2)", min_value=5, max_value=25, value=7)
 
 # Capacity settings
 # capacity_settings = {
@@ -114,7 +113,7 @@ if is_mobile:
     
     st.subheader("Production Cost Map")
     st.plotly_chart(create_interactive_cost_map(current_data, 
-                    'Vientiane trucking production cost', max_cost),
+                    'Vientiane trucking production cost'),
                     use_container_width=True)
     
     st.subheader("Capacity Distribution")
@@ -144,7 +143,7 @@ else:
     with left_col:
         st.subheader("Production Cost Map")
         st.plotly_chart(create_interactive_cost_map(current_data,
-                        'Vientiane trucking production cost', max_cost),
+                        'Vientiane trucking production cost'),
                         use_container_width=True)
         
         st.subheader("Capacity Distribution")
@@ -163,6 +162,7 @@ else:
                         use_container_width=True)
     
         st.subheader("Cost Distribution")
+        max_cost = st.slider("Max Cost (USD/kgH2)", min_value=5, max_value=25, value=7)
         st.plotly_chart(create_cost_distribution(scenarios_data, max_cost), 
                 use_container_width=True)
         
