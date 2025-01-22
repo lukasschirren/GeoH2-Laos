@@ -10,13 +10,13 @@ from app_functions import (create_interactive_cost_map, create_interactive_capac
                          get_capacity_ranges)
 
 # Page config
-st.set_page_config(layout="wide", page_title="Hydrogen Production Scenarios")
+st.set_page_config(layout="wide", page_title="Overview of Scenarios")
 
 # Responsive CSS
 st.markdown("""
 <style>
     .main > div {
-        padding-top: 0rem;
+        padding-top: 2rem;
     }
     .block-container {
         padding-top: 1rem;
@@ -41,6 +41,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.title("Green Hydrogen Production in Laos")
+st.markdown('<p class="subtitle">This dashboard shows the hydrogen production scenarios for Laos, using the GeoH2 model tailored for four drivers, resulting in 24 scenarios. It contrasts using hydropower solely for hydrogen production (total) with the method prioritising electricity demand before using surplus for hydrogen (net). Key electrolyser technologies assessed include alkaline electrolyte membrane (ALK) and polymer electrolyte membrane (PEM). Total generation runs omit baseload, while net generation incorporates it, highlighting net generations stricter constraints. Hydropower data from dry and wet years by the Ministry of Energy and Mines is compared to ERA5s five-year average theoretical runoff data.</p>', 
+            unsafe_allow_html=True)
+
 # Screen size detection
 screen_width = st.session_state.get('screen_width', 1200)
 html("""
@@ -55,6 +59,7 @@ html("""
         window.addEventListener('resize', updateScreenWidth);
     </script>
 """)
+
 
 # Device detection
 is_mobile = screen_width < 768
@@ -109,7 +114,7 @@ capacity_settings = get_capacity_ranges(current_data)
 # Responsive layout
 if is_mobile:
     # Mobile layout - vertical stack
-    st.title("Hydrogen Production Scenarios")
+    # st.title("Hydrogen Production Scenarios")
     
     st.subheader("Production Cost Map")
     st.plotly_chart(create_interactive_cost_map(current_data, 
@@ -136,7 +141,7 @@ if is_mobile:
 
 else:
     # Desktop layout - 2x2 grid
-    st.title("Hydrogen Production Scenarios")
+    # st.title("Hydrogen Production Scenarios")
     
     left_col, right_col = st.columns([0.4, 0.6])
     
