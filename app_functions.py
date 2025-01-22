@@ -54,7 +54,7 @@ def create_interactive_cost_map(hexagons, cost_column):
         category_orders={'cost_category': labels},
         hover_data=list(hover_columns.keys()),
         mapbox_style="carto-positron",
-        opacity=0.7,
+        # opacity=0.7,
         center={"lat": 18, "lon": 103},
         zoom=5
     )
