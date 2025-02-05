@@ -42,8 +42,30 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("Green Hydrogen Production in Laos")
-st.markdown('<p class="subtitle">This dashboard shows the hydrogen production scenarios for Laos, using the GeoH2 model tailored for four drivers, resulting in 24 scenarios. It contrasts using hydropower solely for hydrogen production (total) with the method prioritising electricity demand before using surplus for hydrogen (net). Key electrolyser technologies assessed include alkaline electrolyte membrane (ALK) and polymer electrolyte membrane (PEM). Total generation runs omit baseload, while net generation incorporates it, highlighting net generations stricter constraints. Hydropower data from dry and wet years by the Ministry of Energy and Mines is compared to ERA5s five-year average theoretical runoff data.</p>', 
-            unsafe_allow_html=True)
+# st.markdown('<p class="subtitle">This dashboard shows the hydrogen production scenarios for Laos, using the GeoH2 model tailored for four drivers, resulting in 24 scenarios. It contrasts using hydropower solely for hydrogen production (total) with the method prioritising electricity demand before using surplus for hydrogen (net). Key electrolyser technologies assessed include alkaline electrolyte membrane (ALK) and polymer electrolyte membrane (PEM). Total generation runs omit baseload, while net generation incorporates it, highlighting net generations stricter constraints. Hydropower data from dry and wet years by the Ministry of Energy and Mines is compared to ERA5s five-year average theoretical runoff data.</p>', 
+#             unsafe_allow_html=True)
+st.markdown('''
+<p class="subtitle">
+This dashboard presents hydrogen production scenarios for Laos, modeled using the GeoH2 framework with four key factors, resulting in 24 different scenarios. The different scenarios can be selected on the left side. 
+</p>
+
+<b>Generation Availability:</b>  
+- <i>Optimistic:</i> Assumes more electricity is available for hydrogen production.  
+- <i>Conservative:</i> Prioritizes household and industrial electricity demand first, using only surplus for hydrogen.  
+
+<b>Rainfall Conditions:</b>  
+- <i>High:</i> Based on electricity generation in a high-rainfall year (2022).  
+- <i>Low:</i> Based on electricity generation in a low-rainfall year (2019).  
+- <i>5-Year Average:</i> Uses an estimated long-term average from satellite data (ERA5).  
+
+<b>Electrolyser Technology:</b>  
+- Compares two hydrogen production technologies: **Alkaline (ALK)** and **Polymer Electrolyte Membrane (PEM)**.  
+
+<b>Scenario Year:</b>  
+- Includes **electricity demand projections** for **2025** and **2030** to help plan for future hydrogen production.  
+''', unsafe_allow_html=True)
+
+
 
 # Screen size detection
 screen_width = st.session_state.get('screen_width', 1200)
@@ -66,10 +88,39 @@ is_mobile = screen_width < 768
 
 # Sidebar controls
 st.sidebar.header("Scenario Selection")
-generation_type = st.sidebar.selectbox("Generation Type", ["total_generation", "net_generation"])
-hydro_year = st.sidebar.selectbox("Hydro Year", ["wet", "dry", "atlite"])
+
+# Create mapping for display names to values
+generation_mapping = {
+    "Optimistic": "total_generation",
+    "Conservative": "net_generation"
+}
+
+# Update selectbox with display names
+generation_type_display = st.sidebar.selectbox(
+    "Generation Availability", 
+    list(generation_mapping.keys())
+)
+
+# Convert display name to actual value
+generation_type = generation_mapping[generation_type_display]
+
+hydro_mapping = {
+    "High": "wet",
+    "Low": "dry", 
+    "5 Year Average": "atlite"
+}
+
+hydro_year_display = st.sidebar.selectbox(
+    "Rainfall", 
+    list(hydro_mapping.keys())
+)
+
+hydro_year = hydro_mapping[hydro_year_display]
+
 electrolyser_type = st.sidebar.selectbox("Electrolyser Type", ["ALK", "PEM"])
-scenario_year = st.sidebar.selectbox("Scenario Year", ["25", "30"])
+
+scenario_year_display = st.sidebar.selectbox("Year", ["2025", "2030"])
+scenario_year = scenario_year_display[-2:]  # Extract last 2 digits
 
 # Capacity settings
 # capacity_settings = {
