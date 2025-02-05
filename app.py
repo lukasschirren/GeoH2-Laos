@@ -42,39 +42,39 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("Green Hydrogen Production in Laos")
-st.markdown("""
-# GeoH2 Framework - Laos Hydrogen Production Scenarios
+# st.markdown("""
+# # GeoH2 Framework - Laos Hydrogen Production Scenarios
 
-This dashboard presents hydrogen production scenarios for Laos, modeled using the GeoH2 framework. 
-The analysis considers four key factors:
+# This dashboard presents hydrogen production scenarios for Laos, modeled using the GeoH2 framework. 
+# The analysis considers four key factors:
 
-- **Hydro Year**: High (wet), Low (dry), or 5-Year Average water availability
-- **Generation Type**: Optimistic or Conservative renewable energy potential
-- **Electrolyser Type**: Alkaline (ALK) or Proton Exchange Membrane (PEM)
-- **Target Year**: 2025 or 2030
+# - **Hydro Year**: High (wet), Low (dry), or 5-Year Average water availability
+# - **Generation Type**: Optimistic or Conservative renewable energy potential
+# - **Electrolyser Type**: Alkaline (ALK) or Proton Exchange Membrane (PEM)
+# - **Target Year**: 2025 or 2030
 
-These factors combine to create 24 unique scenarios (2×3×2×2), which can be selected using the controls on the left side.
-""")
-# st.markdown('''
-# <p class="subtitle">
-# This dashboard presents hydrogen production scenarios for Laos, modeled using the GeoH2 framework with four key factors, resulting in 24 different scenarios. The different scenarios can be selected on the left side. 
-# </p>
+# These factors combine to create 24 unique scenarios (2×3×2×2), which can be selected using the controls on the left side.
+# """)
+st.markdown('''
+<p class="subtitle">
+This dashboard presents hydrogen production scenarios for Laos, modeled using the GeoH2 framework with four key factors, resulting in 24 different scenarios. The different scenarios can be selected on the left side. 
+</p>
 
-# <b>Generation Availability:</b>  
-# - <i>Optimistic:</i> Assumes more electricity is available for hydrogen production.  
-# - <i>Conservative:</i> Prioritizes household and industrial electricity demand first, using only surplus for hydrogen.  
+<b>Generation Availability:</b>  
+- <i>Optimistic:</i> Assumes more electricity is available for hydrogen production.  
+- <i>Conservative:</i> Prioritizes household and industrial electricity demand first, using only surplus for hydrogen.  
 
-# <b>Rainfall Conditions:</b>  
-# - <i>High:</i> Based on electricity generation in a high-rainfall year (2022).  
-# - <i>Low:</i> Based on electricity generation in a low-rainfall year (2019).  
-# - <i>5-Year Average:</i> Uses an estimated long-term average from satellite data (ERA5).  
+<b>Rainfall Conditions:</b>  
+- <i>High:</i> Based on electricity generation in a high-rainfall year (2022).  
+- <i>Low:</i> Based on electricity generation in a low-rainfall year (2019).  
+- <i>5-Year Average:</i> Uses an estimated long-term average from satellite data (ERA5).  
 
-# <b>Electrolyser Technology:</b>  
-# - Compares two hydrogen production technologies: **Alkaline (ALK)** and **Polymer Electrolyte Membrane (PEM)**.  
+<b>Electrolyser Technology:</b>  
+- Compares two hydrogen production technologies: **Alkaline (ALK)** and **Polymer Electrolyte Membrane (PEM)**.  
 
-# <b>Scenario Year:</b>  
-# - Includes **electricity demand projections** for **2025** and **2030** to help plan for future hydrogen production.  
-# ''', unsafe_allow_html=True)
+<b>Scenario Year:</b>  
+- Includes **electricity demand projections** for **2025** and **2030** to help plan for future hydrogen production.  
+''', unsafe_allow_html=True)
 
 
 
@@ -141,14 +141,70 @@ scenario_year = scenario_year_display[-2:]  # Extract last 2 digits
 #     'electrolyzer': {'vmin': 0, 'vmax': 200}
 # }
 
+DISPLAY_MAPPINGS = {
+    'generation': {
+        'display_to_internal': {
+            "Optimistic": "total_generation",
+            "Conservative": "net_generation"
+        },
+        'internal_to_display': {
+            "total_generation": "Optimistic",
+            "net_generation": "Conservative"
+        }
+    },
+    'hydro': {
+        'display_to_internal': {
+            "High": "wet",
+            "Low": "dry",
+            "5 Year Average": "atlite"
+        },
+        'internal_to_display': {
+            "wet": "High",
+            "dry": "Low",
+            "atlite": "5 Year Average"
+        }
+    },
+    'year': {
+        'display_to_internal': {
+            "2025": "25",
+            "2030": "30"
+        },
+        'internal_to_display': {
+            "25": "2025",
+            "30": "2030"
+        }
+    }
+}
+
 # Load data
 @st.cache_data
+# def load_all_scenarios():
+#     scenarios = []
+#     for gen in ["total_generation", "net_generation"]:
+#         for hydro in ["wet", "dry", "atlite"]:
+#             for elec in ["ALK", "PEM"]:
+#                 for year in ["25", "30"]:
+#                     try:
+#                         path = f'Resources/{gen}/Scenario_{hydro}_{elec}_{year}/hex_cost_components.geojson'
+#                         data = gpd.read_file(path)
+#                         data = data.drop_duplicates(subset=['h3_index'])
+#                         scenarios.append({
+#                             'data': data,
+#                             'gen': gen,
+#                             'hydro': hydro,
+#                             'elec': elec,
+#                             'year': year
+#                         })
+#                     except Exception:
+#                         continue
+#     return scenarios
+
 def load_all_scenarios():
     scenarios = []
-    for gen in ["total_generation", "net_generation"]:
-        for hydro in ["wet", "dry", "atlite"]:
+    for gen in DISPLAY_MAPPINGS['generation']['internal_to_display'].keys():
+        for hydro in DISPLAY_MAPPINGS['hydro']['internal_to_display'].keys():
             for elec in ["ALK", "PEM"]:
-                for year in ["25", "30"]:
+                for year in DISPLAY_MAPPINGS['year']['internal_to_display'].keys():
                     try:
                         path = f'Resources/{gen}/Scenario_{hydro}_{elec}_{year}/hex_cost_components.geojson'
                         data = gpd.read_file(path)
@@ -158,7 +214,10 @@ def load_all_scenarios():
                             'gen': gen,
                             'hydro': hydro,
                             'elec': elec,
-                            'year': year
+                            'year': year,
+                            'display_gen': DISPLAY_MAPPINGS['generation']['internal_to_display'][gen],
+                            'display_hydro': DISPLAY_MAPPINGS['hydro']['internal_to_display'][hydro],
+                            'display_year': DISPLAY_MAPPINGS['year']['internal_to_display'][year]
                         })
                     except Exception:
                         continue
