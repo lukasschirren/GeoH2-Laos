@@ -200,26 +200,35 @@ def generate_waterfall_chart(gdf):
         xaxis_title="Cost Components",
         yaxis_title="LCOH [USD/kgH2]",
         xaxis={
-            'showline': True,
-            'linewidth': 1,
-            'linecolor': 'black',
-            'mirror': True,
-            'tickfont': {'size': 14},
-            'titlefont': {'size': 16},
+                        'type': 'category',
+            'title': {
+                'text': "Cost Components",
+                'font': {'size': 14, 'family': "Arial"}
+            }
+            # 'showline': True,
+            # 'linewidth': 1,
+            # 'linecolor': 'black',
+            # 'mirror': True,
+            # 'tickfont': {'size': 14},
+            # 'titlefont': {'size': 16},
             # 'showgrid': True,
             # 'gridwidth': 1,
             # 'gridcolor': 'lightgrey'
         },
         yaxis={
-            'showline': True,
-            'linewidth': 1,
-            'linecolor': 'black',
-            'mirror': True,
-            'tickfont': {'size': 14},
-            'titlefont': {'size': 16},
-            'showgrid': True,
-            'gridwidth': 1,
-            'gridcolor': 'lightgrey'
+            'title': {
+                'text': "LCOH [USD/kgH2]",
+                'font': {'size': 14, 'family': "Arial"}
+            }
+            # 'showline': True,
+            # 'linewidth': 1,
+            # 'linecolor': 'black',
+            # 'mirror': True,
+            # 'tickfont': {'size': 14},
+            # 'titlefont': {'size': 16},
+            # 'showgrid': True,
+            # 'gridwidth': 1,
+            # 'gridcolor': 'lightgrey'
         },
         # plot_bgcolor='white',
         showlegend=False,
