@@ -5,6 +5,7 @@ import geopandas as gpd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from config import DISPLAY_MAPPINGS
 from app_functions import (create_interactive_cost_map, create_interactive_capacity_map, 
                          generate_waterfall_chart, create_cost_distribution,
                          get_capacity_ranges)
@@ -140,41 +141,6 @@ scenario_year = scenario_year_display[-2:]  # Extract last 2 digits
 #     'wind': {'vmin': 20, 'vmax': 200},
 #     'electrolyzer': {'vmin': 0, 'vmax': 200}
 # }
-
-DISPLAY_MAPPINGS = {
-    'generation': {
-        'display_to_internal': {
-            "Optimistic": "total_generation",
-            "Conservative": "net_generation"
-        },
-        'internal_to_display': {
-            "total_generation": "Optimistic",
-            "net_generation": "Conservative"
-        }
-    },
-    'hydro': {
-        'display_to_internal': {
-            "High": "wet",
-            "Low": "dry",
-            "5 Year Average": "atlite"
-        },
-        'internal_to_display': {
-            "wet": "High",
-            "dry": "Low",
-            "atlite": "5 Year Average"
-        }
-    },
-    'year': {
-        'display_to_internal': {
-            "2025": "25",
-            "2030": "30"
-        },
-        'internal_to_display': {
-            "25": "2025",
-            "30": "2030"
-        }
-    }
-}
 
 # Load data
 @st.cache_data

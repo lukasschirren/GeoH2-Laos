@@ -8,6 +8,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
+from config import DISPLAY_MAPPINGS
+
 def ensure_directory_exists(path):
     """Create directory if it doesn't exist"""
     if not os.path.exists(path):
@@ -230,7 +232,6 @@ def generate_waterfall_chart(gdf):
     return fig
 
 def create_cost_distribution(scenarios_data, max_cost):
-    """Creates cost distribution plot comparing net and total generation"""
     fig = go.Figure()
     
     # Sort scenarios by generation type
@@ -245,7 +246,10 @@ def create_cost_distribution(scenarios_data, max_cost):
         costs = data[mask]['Vientiane trucking production cost'].sort_values()
         x_values = np.arange(len(costs))
         
-        name = f"{scenario['hydro'].capitalize()} {scenario['elec']} {scenario['year']}"
+        # Update name formatting using display mappings
+        hydro_display = DISPLAY_MAPPINGS['hydro']['internal_to_display'][scenario['hydro']]
+        year_display = DISPLAY_MAPPINGS['year']['internal_to_display'][scenario['year']]
+        name = f"{hydro_display} {scenario['elec']} {year_display}"
         
         fig.add_trace(go.Scatter(
             x=x_values,
@@ -253,8 +257,8 @@ def create_cost_distribution(scenarios_data, max_cost):
             name=name,
             line=dict(dash='dash'),
             showlegend=True,
-            legendgroup="net",
-            legendgrouptitle_text="Net Generation"
+            legendgroup="Conservative",
+            legendgrouptitle_text="Conservative"
         ))
     
     # Plot total generation traces
@@ -265,7 +269,10 @@ def create_cost_distribution(scenarios_data, max_cost):
         costs = data[mask]['Vientiane trucking production cost'].sort_values()
         x_values = np.arange(len(costs))
         
-        name = f"{scenario['hydro'].capitalize()} {scenario['elec']} {scenario['year']}"
+        # Update name formatting using display mappings
+        hydro_display = DISPLAY_MAPPINGS['hydro']['internal_to_display'][scenario['hydro']]
+        year_display = DISPLAY_MAPPINGS['year']['internal_to_display'][scenario['year']]
+        name = f"{hydro_display} {scenario['elec']} {year_display}"
         
         fig.add_trace(go.Scatter(
             x=x_values,
@@ -273,8 +280,8 @@ def create_cost_distribution(scenarios_data, max_cost):
             name=name,
             line=dict(dash='solid'),
             showlegend=True,
-            legendgroup="total",
-            legendgrouptitle_text="Total Generation"
+            legendgroup="Optimistic",
+            legendgrouptitle_text="Optimistic"
         ))
     
     fig.update_layout(
