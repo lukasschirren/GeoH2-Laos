@@ -1,1 +1,9 @@
-CITATION.cff
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Schirren"
+  given-names: "Lukas"
+  orcid: "https://orcid.org/0009-0009-4317-5680"
+title: "GeoH2-Laos"
+date-released: 2025-02-01
+url: "https://github.com/lukasschirren/GeoH2-Laos"
