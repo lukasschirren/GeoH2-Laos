@@ -62,8 +62,8 @@ This dashboard presents hydrogen production scenarios for Laos, modeled using th
 </p>
 
 <b>Generation Availability:</b>  
-- <i>Optimistic:</i> Assumes more electricity is available for hydrogen production.  
-- <i>Conservative:</i> Prioritizes household and industrial electricity demand first, using only surplus for hydrogen.  
+- <i>Optimistic:</i> Assumes more electricity is available for hydrogen production (Total generation).  
+- <i>Conservative:</i> Prioritizes household and industrial electricity demand first, using only surplus for hydrogen (Net generation).  
 
 <b>Rainfall Conditions:</b>  
 - <i>High:</i> Based on electricity generation in a high-rainfall year (2022).  
